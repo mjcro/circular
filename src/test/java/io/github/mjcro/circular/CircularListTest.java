@@ -5,6 +5,7 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class CircularListTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -147,6 +148,26 @@ public class CircularListTest {
         Assert.assertEquals(strings.toArray(new String[3]), new String[]{"b", "c", null});
     }
 
+    @Test(dependsOnMethods = "testBasic")
+    public void testTailFunctions() {
+        CircularList<String> strings = new CircularList<>(3);
+        Assert.assertEquals(strings.tailStream(2).collect(Collectors.joining(",")), "");
+
+        strings.add("a");
+        Assert.assertEquals(strings.tailStream(2).collect(Collectors.joining(",")), "a");
+
+        strings.add("b");
+        Assert.assertEquals(strings.tailStream(2).collect(Collectors.joining(",")), "a,b");
+
+        strings.add("c");
+        Assert.assertEquals(strings.tailStream(2).collect(Collectors.joining(",")), "b,c");
+
+        strings.add("d");
+        Assert.assertEquals(strings.tailStream(2).collect(Collectors.joining(",")), "c,d");
+        Assert.assertEquals(strings.tailStream(3).collect(Collectors.joining(",")), "b,c,d");
+        Assert.assertEquals(strings.tailStream(4).collect(Collectors.joining(",")), "b,c,d");
+    }
+
     @Test(expectedExceptions = UnsupportedOperationException.class)
     public void testUnsupportedRemove() {
         new CircularList<String>(2).remove("foo");
@@ -160,5 +181,10 @@ public class CircularListTest {
     @Test(expectedExceptions = UnsupportedOperationException.class)
     public void testUnsupportedRetainAll() {
         new CircularList<String>(2).retainAll(new ArrayList<>());
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testInvalidTail() {
+        new CircularList<String>(5).tailStream(0);
     }
 }

@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Simple implementation of circular, not thread-safe collection with fixed capacity.
@@ -91,7 +94,7 @@ public class CircularList<E> implements Collection<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return new CircularListIterator();
+        return new CircularListIterator(cycles > 0 ? index - elements.length : 0);
     }
 
     @Override
@@ -173,13 +176,39 @@ public class CircularList<E> implements Collection<E> {
     }
 
     /**
+     * Returns iterator containing only N last elements.
+     *
+     * @param n Number of elements.
+     * @return Iterator.
+     */
+    public Iterator<E> tailIterator(int n) {
+        if (n < 1) {
+            throw new IllegalArgumentException("Invalid tail size " + n);
+        } else if (n >= elements.length) {
+            return iterator();
+        }
+
+        return new CircularListIterator(cycles > 0 ? index - n : (n >= index ? 0 : index - n));
+    }
+
+    /**
+     * Returns stream containing only N last elements.
+     *
+     * @param n Number of elements.
+     * @return Stream.
+     */
+    public Stream<E> tailStream(int n) {
+        return StreamSupport.stream(Spliterators.spliterator(tailIterator(n), n > size() ? size() : n, 0), false);
+    }
+
+    /**
      * Iterator object.
      */
     private class CircularListIterator implements Iterator<E> {
         private int position;
 
-        private CircularListIterator() {
-            this.position = cycles > 0 ? index - elements.length : 0;
+        private CircularListIterator(int position) {
+            this.position = position;
         }
 
         @Override
