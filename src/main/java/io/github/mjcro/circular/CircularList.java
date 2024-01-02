@@ -12,7 +12,7 @@ import java.util.stream.StreamSupport;
  * Simple implementation of circular, not thread-safe collection with fixed capacity.
  * Whenever a new element is added when collection is full, it overwrites the oldest one.
  * <p>
- * Implementation via array instead of clasic {@link java.util.LinkedList} made intentionally
+ * Implementation via array instead of classic {@link java.util.LinkedList} made intentionally
  * to achieve minimal memory and GC footprint (the closest distance to GC roots)
  * <p>
  * This component can be useful to hold small amount of not-critical diagnostics like logs .
@@ -94,7 +94,7 @@ public class CircularList<E> implements Collection<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return new CircularListIterator(cycles > 0 ? index - elements.length : 0);
+        return new ArrayIterator<>(this.elements, cycles > 0 ? index - elements.length : 0, this.index);
     }
 
     @Override
@@ -184,11 +184,11 @@ public class CircularList<E> implements Collection<E> {
     public Iterator<E> tailIterator(int n) {
         if (n < 1) {
             throw new IllegalArgumentException("Invalid tail size " + n);
-        } else if (n >= elements.length) {
+        } else if (n >= size()) {
             return iterator();
         }
 
-        return new CircularListIterator(cycles > 0 ? index - n : (n >= index ? 0 : index - n));
+        return new ArrayIterator<>(this.elements, cycles > 0 ? index - n : (n >= index ? 0 : index - n), this.index);
     }
 
     /**
@@ -199,28 +199,5 @@ public class CircularList<E> implements Collection<E> {
      */
     public Stream<E> tailStream(int n) {
         return StreamSupport.stream(Spliterators.spliterator(tailIterator(n), n > size() ? size() : n, 0), false);
-    }
-
-    /**
-     * Iterator object.
-     */
-    private class CircularListIterator implements Iterator<E> {
-        private int position;
-
-        private CircularListIterator(int position) {
-            this.position = position;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return position < index;
-        }
-
-        @Override
-        public E next() {
-            E e = elements[position < 0 ? position + elements.length : position];
-            position++;
-            return e;
-        }
     }
 }
