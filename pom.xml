@@ -6,7 +6,7 @@
 
     <groupId>io.github.mjcro</groupId>
     <artifactId>circular</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 
     <name>MicroJ Circular List</name>
     <description>Circular list</description>
