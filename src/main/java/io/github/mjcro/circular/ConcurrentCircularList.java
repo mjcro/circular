@@ -25,9 +25,7 @@ public class ConcurrentCircularList<E> implements Collection<E> {
     // Data array
     private final E[] elements;
     // Index to write next element being added
-    private int index = 0;
-    // Count of overflow cycles already being made
-    private long cycles = 0;
+    private long index = 0;
 
     /**
      * Constructs component with given capacity.
@@ -54,6 +52,13 @@ public class ConcurrentCircularList<E> implements Collection<E> {
     }
 
     /**
+     * @return Offset in the array
+     */
+    private int offset() {
+        return (int) (this.index % this.elements.length);
+    }
+
+    /**
      * Internal method (for testing purposes) to obtain element by
      * it's index.
      *
@@ -68,17 +73,17 @@ public class ConcurrentCircularList<E> implements Collection<E> {
      * @return Amount of items was added to this collection.
      */
     public long getCount() {
-        return cycles * elements.length + index;
+        return index;
     }
 
     @Override
     public int size() {
-        return cycles > 0 ? elements.length : index;
+        return index > elements.length ? elements.length : (int) index;
     }
 
     @Override
     public boolean isEmpty() {
-        return index == 0 && cycles == 0;
+        return index == 0;
     }
 
     @Override
@@ -100,12 +105,12 @@ public class ConcurrentCircularList<E> implements Collection<E> {
 
     @Override
     public synchronized Object[] toArray() {
-        if (cycles == 0 || index == 0) {
+        if (index < elements.length) {
             return Arrays.copyOf(this.elements, size());
         }
         Object[] response = new Object[size()];
-        System.arraycopy(this.elements, index, response, 0, this.elements.length - index);
-        System.arraycopy(this.elements, 0, response, this.elements.length - index, index);
+        System.arraycopy(this.elements, offset(), response, 0, this.elements.length - offset());
+        System.arraycopy(this.elements, 0, response, this.elements.length - offset(), offset());
         return response;
     }
 
@@ -125,11 +130,7 @@ public class ConcurrentCircularList<E> implements Collection<E> {
 
     @Override
     public synchronized boolean add(E e) {
-        elements[index] = e;
-        if (++index == elements.length) {
-            index = 0;
-            cycles++;
-        }
+        elements[(int) ((index++) % elements.length)] = e;
         return true;
     }
 
@@ -200,6 +201,5 @@ public class ConcurrentCircularList<E> implements Collection<E> {
     public synchronized void clear() {
         Arrays.fill(elements, null);
         index = 0;
-        cycles = 0;
     }
 }

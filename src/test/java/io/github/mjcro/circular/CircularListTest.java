@@ -63,6 +63,23 @@ public class CircularListTest {
     }
 
     @Test(dependsOnMethods = "testBasic")
+    public void testBigCircularity() {
+        CircularList<Integer> ints = new CircularList<>(5);
+        for (int i = 1; i <= 100; i++) {
+            ints.add(i);
+            if (i > 4) {
+                Assert.assertEquals(
+                        ints.stream().map(Object::toString).collect(Collectors.joining(",")),
+                        (i - 4) + "," + (i - 3) + "," + (i - 2) + "," + (i - 1) + "," + i
+                );
+            }
+        }
+
+        Assert.assertEquals(ints.size(), 5);
+        Assert.assertEquals(ints.getCount(), 100);
+    }
+
+    @Test(dependsOnMethods = "testBasic")
     public void testPrefill() {
         ArrayList<String> initial = new ArrayList<>();
         initial.add("a");

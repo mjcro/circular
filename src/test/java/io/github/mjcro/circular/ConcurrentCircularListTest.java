@@ -63,6 +63,48 @@ public class ConcurrentCircularListTest {
     }
 
     @Test(dependsOnMethods = "testBasic")
+    public void testBigCircularity() {
+        CircularList<Integer> ints = new CircularList<>(5);
+        for (int i = 1; i <= 100; i++) {
+            ints.add(i);
+            if (i > 4) {
+                Assert.assertEquals(
+                        ints.stream().map(Object::toString).collect(Collectors.joining(",")),
+                        (i - 4) + "," + (i - 3) + "," + (i - 2) + "," + (i - 1) + "," + i
+                );
+            }
+        }
+
+        Assert.assertEquals(ints.size(), 5);
+        Assert.assertEquals(ints.getCount(), 100);
+    }
+
+    @Test(dependsOnMethods = "testBasic")
+    public void testNoConcurrencyErrors() throws InterruptedException {
+        ConcurrentCircularList<Integer> ints = new ConcurrentCircularList<>(5);
+        Thread[] threads = new Thread[10];
+
+        for (int x = 0; x < threads.length; x++) {
+            threads[x] = new Thread(() -> {
+                for (int i = 1; i <= 100; i++) {
+                    ints.add(i);
+                }
+            });
+        }
+
+        for (Thread thread : threads) {
+            thread.start();
+        }
+
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        Assert.assertEquals(ints.size(), 5);
+        Assert.assertEquals(ints.getCount(), 1000);
+    }
+
+    @Test(dependsOnMethods = "testBasic")
     public void testPrefill() {
         ArrayList<String> initial = new ArrayList<>();
         initial.add("a");
